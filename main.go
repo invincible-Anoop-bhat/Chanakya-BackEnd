@@ -14,7 +14,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/index", api.Index).Methods("GET")
-	router.HandleFunc("/getAllCustomers", api.getAllCustomers).Methods("GET")
+	router.HandleFunc("/getAllCustomers", api.GetAllCustomers).Methods("GET")
 
 	router.Use(interceptor.LoggingMiddleware)
 	router.Use(interceptor.AuthMiddleware)
@@ -24,7 +24,7 @@ func main() {
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 	})
 
-	log.Printf("Starting server at port 8080\n.\n.\n.\n")
+	log.Printf("Starting server at port 8080\n")
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
 	log.Printf("Server Started on port 8080")
 }

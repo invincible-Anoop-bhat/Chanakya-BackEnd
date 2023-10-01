@@ -1,11 +1,15 @@
 package api
 
 import (
+	"Chanakya-BackEnd/model"
+	"encoding/json"
 	"net/http"
 )
 
-func getAllCustomers(w http.ResponseWriter, r *http.Request) {
-	respondJSON(w, http.StatusOK, "All Customers")
+func GetAllCustomers(w http.ResponseWriter, r *http.Request) {
+	dbdata := GetCustomersFromDB()
+	data := model.CopyArrayToCustomer(dbdata)
+	respondJSON(w, http.StatusOK, data)
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -17,5 +21,5 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write([]byte("data"))
+	json.NewEncoder(w).Encode(data)
 }

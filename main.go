@@ -15,12 +15,13 @@ func main() {
 
 	router.HandleFunc("/index", api.Index).Methods("GET")
 	router.HandleFunc("/getAllCustomers", api.GetAllCustomers).Methods("GET")
-
+	router.HandleFunc("/getCustomer/{id}", api.GetCustomerById).Methods("GET")
+	router.HandleFunc("/addCustomer", api.AddCustomer).Methods("POST")
 	router.Use(interceptor.LoggingMiddleware)
 	router.Use(interceptor.AuthMiddleware)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"/"},
+		AllowedOrigins: []string{"http://localhost:4200"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 	})
 

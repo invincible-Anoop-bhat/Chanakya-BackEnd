@@ -13,15 +13,15 @@ type Customer struct {
 }
 
 type CustomerDB struct {
-	Cid          int32
-	CName        string
-	CContact     string
-	AltContact   string
-	CArea        string
-	CAddress     string
-	Gloc         string
-	OtherDetails string
-	BusinessType string
+	Cid          int32  `bson:"cid"`
+	CName        string `bson:"cName"`
+	CContact     string `bson:"cContact"`
+	AltContact   string `bson:"altContact"`
+	CArea        string `bson:"cArea"`
+	CAddress     string `bson:"cAddress"`
+	Gloc         string `bson:"gloc"`
+	OtherDetails string `bson:"otherDetails"`
+	BusinessType string `bson:"businessType"`
 }
 
 func (dbdata *CustomerDB) CopyToCustomer() Customer {
@@ -54,4 +54,17 @@ func CopyArrayToCustomer(dbdatas []CustomerDB) []Customer {
 	}
 
 	return customers
+}
+func CopyToCustomerDB(data Customer) CustomerDB {
+	var dbdata CustomerDB
+	dbdata.Cid = data.Id
+	dbdata.CName = data.Name
+	dbdata.CContact = data.Contact
+	dbdata.AltContact = data.AltContact
+	dbdata.CArea = data.Area
+	dbdata.BusinessType = data.BusinessTuype
+	dbdata.CAddress = data.Address
+	dbdata.Gloc = data.LocationLink
+	dbdata.OtherDetails = data.OtherDetails
+	return dbdata
 }

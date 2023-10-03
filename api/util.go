@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"Chanakya-BackEnd/model"
 
+	"github.com/oxycoder/struct2bson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -66,6 +68,37 @@ func query(client *mongo.Client, ctx context.Context,
 	return result, err
 }
 
+func insertCustomerToDB(data model.CustomerDB) error {
+	insertdata := struct2bson.ConvertStructToBSONMap(data, nil)
+	client, ctx, cancel, err := connect("mongodb://localhost:27017")
+	if err != nil {
+		return err
+	}
+
+	// Release resource when main function is returned.
+	defer close(client, ctx, cancel)
+
+	insertOneResult, err := insertOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, insertdata)
+	if err != nil {
+		return err
+	}
+	log.Print("Result of InsertOne : ")
+	log.Println(insertOneResult.InsertedID)
+	return nil
+}
+
+func insertOne(client *mongo.Client, ctx context.Context, dataBase, col string, doc interface{}) (*mongo.InsertOneResult, error) {
+
+	// select database and collection ith Client.Database method
+	// and Database.Collection method
+	collection := client.Database(dataBase).Collection(col)
+
+	// InsertOne accept two argument of type Context
+	// and of empty interface
+	result, err := collection.InsertOne(ctx, doc)
+	return result, err
+}
+
 func GetCustomersFromDB() []model.CustomerDB {
 
 	// Get Client, Context, CancelFunc and err from connect method.
@@ -86,7 +119,7 @@ func GetCustomersFromDB() []model.CustomerDB {
 	filter = bson.D{}
 
 	//  option remove id field from all documents
-	option = bson.D{}
+	option = bson.D{{"_id", 0}}
 
 	// call the query method with client, context,
 	// database name, collection  name, filter and option
@@ -113,4 +146,27 @@ func GetCustomersFromDB() []model.CustomerDB {
 	// 	fmt.Println(doc)
 	// }
 	return results
+}
+func GetCustomerbyIDFromDB(Id int) model.CustomerDB {
+	client, ctx, cancel, err := connect("mongodb://localhost:27017")
+	if err != nil {
+		panic(err)
+	}
+
+	defer close(client, ctx, cancel)
+
+	filter := bson.D{{"cid", Id}}
+
+	collection := client.Database(DATABASE_NAME).Collection(COLLECTION_NAME)
+	cursor := collection.FindOne(ctx, filter)
+	if err != nil {
+		panic(err)
+	}
+
+	var result model.CustomerDB
+	if err := cursor.Decode(&result); err != nil {
+		// handle the error
+		panic(err)
+	}
+	return result
 }

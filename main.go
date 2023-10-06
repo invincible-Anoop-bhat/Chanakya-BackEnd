@@ -23,8 +23,9 @@ func main() {
 	router.HandleFunc("/addCustomer", api.AddCustomer).Methods("POST")
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:4200"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowCredentials: true,
 	})
 
 	log.Printf("Starting server at port 8080\n")

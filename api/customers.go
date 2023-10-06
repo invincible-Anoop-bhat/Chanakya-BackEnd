@@ -54,6 +54,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
+	// w.Header().Set("Access-Control-Allow-Origin", "http://localho st:4200")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
 }

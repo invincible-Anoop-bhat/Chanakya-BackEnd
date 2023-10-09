@@ -68,6 +68,58 @@ func query(client *mongo.Client, ctx context.Context,
 	return result, err
 }
 
+//UPDATE
+func updateCustomerInDB(data model.CustomerDB) error {
+	insertdata := struct2bson.ConvertStructToBSONMap(data, nil)
+	// get Client, Context, CancelFunc and err from connect method.
+	client, ctx, cancel, err := connect("mongodb://localhost:27017")
+	if err != nil {
+		panic(err)
+	}
+
+	// Free the resource when main function in returned
+	defer close(client, ctx, cancel)
+
+	// filter object is used to select a single
+	// document matching that matches.
+	filter := bson.D{
+		{"cid", bson.D{{"$eq", data.Cid}}},
+	}
+
+	// The field of the document that need to updated.
+	update := bson.D{
+		{"$set", insertdata},
+	}
+
+	// Returns result of updated document and a error.
+	result, err := UpdateOne(client, ctx, DATABASE_NAME,
+		COLLECTION_NAME, filter, update)
+
+	// handle error
+	if err != nil {
+		panic(err)
+	}
+
+	// print count of documents that affected
+	log.Println("update single document")
+	log.Println(result.ModifiedCount)
+	return nil
+}
+
+func UpdateOne(client *mongo.Client, ctx context.Context, dataBase,
+	col string, filter, update interface{}) (result *mongo.UpdateResult, err error) {
+
+	// select the database and the collection
+	collection := client.Database(dataBase).Collection(col)
+
+	// A single document that match with the
+	// filter will get updated.
+	// update contains the filed which should get updated.
+	result, err = collection.UpdateOne(ctx, filter, update)
+	return
+}
+
+//INSERT
 func insertCustomerToDB(data model.CustomerDB) error {
 	insertdata := struct2bson.ConvertStructToBSONMap(data, nil)
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")

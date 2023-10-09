@@ -46,6 +46,17 @@ func AddCustomer(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, requestBody)
 }
 
+func UpdateCustomerData(w http.ResponseWriter, r *http.Request) {
+	requestBody := model.Customer{}
+	json.NewDecoder(r.Body).Decode(&requestBody)
+	dataToUpdate := model.CopyToCustomerDB(requestBody)
+	err := updateCustomerInDB(dataToUpdate)
+	if err != nil {
+		http.Error(w, "Error Adding Customer details", http.StatusInternalServerError)
+	}
+	respondJSON(w, http.StatusCreated, requestBody)
+}
+
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

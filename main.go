@@ -18,10 +18,11 @@ func main() {
 
 	router.HandleFunc("/index", api.Index).Methods("GET")
 
+	router.HandleFunc("/addCustomer", api.AddCustomer).Methods("POST")
 	router.HandleFunc("/getAllCustomers", api.GetAllCustomers).Methods("GET")
 	router.HandleFunc("/getCustomer/{id}", api.GetCustomerById).Methods("GET")
-	router.HandleFunc("/addCustomer", api.AddCustomer).Methods("POST")
 
+	router.HandleFunc("/updateCustomer", api.UpdateCustomerData).Methods("PUT")
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},

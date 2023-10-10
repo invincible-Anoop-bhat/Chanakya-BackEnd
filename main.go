@@ -23,6 +23,9 @@ func main() {
 	router.HandleFunc("/getCustomer/{id}", api.GetCustomerById).Methods("GET")
 
 	router.HandleFunc("/updateCustomer", api.UpdateCustomerData).Methods("PUT")
+
+	router.HandleFunc("/deleteCustomer/{id}", api.DeleteCustomerData).Methods("DELETE")
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},

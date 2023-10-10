@@ -79,7 +79,6 @@ func updateCustomerInDB(data model.CustomerDB) error {
 
 	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
-
 	// filter object is used to select a single
 	// document matching that matches.
 	filter := bson.D{
@@ -122,12 +121,13 @@ func UpdateOne(client *mongo.Client, ctx context.Context, dataBase,
 //INSERT
 func insertCustomerToDB(data model.CustomerDB) error {
 	insertdata := struct2bson.ConvertStructToBSONMap(data, nil)
+	// get Client, Context, CancelFunc and err from connect method.
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	// Release resource when main function is returned.
+	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
 
 	insertOneResult, err := insertOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, insertdata)
@@ -153,15 +153,14 @@ func insertOne(client *mongo.Client, ctx context.Context, dataBase, col string, 
 
 func GetCustomersFromDB() []model.CustomerDB {
 
-	// Get Client, Context, CancelFunc and err from connect method.
+	// get Client, Context, CancelFunc and err from connect method.
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
 		panic(err)
 	}
 
-	// Free the resource when main function is  returned
+	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
-
 	// create a filter an option of type interface,
 	// that stores bjson objects.
 	var filter, option interface{}
@@ -200,25 +199,58 @@ func GetCustomersFromDB() []model.CustomerDB {
 	return results
 }
 func GetCustomerbyIDFromDB(Id int) model.CustomerDB {
+	// get Client, Context, CancelFunc and err from connect method.
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
 		panic(err)
 	}
 
+	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
 
 	filter := bson.D{{"cid", Id}}
 
 	collection := client.Database(DATABASE_NAME).Collection(COLLECTION_NAME)
 	cursor := collection.FindOne(ctx, filter)
+
+	var result model.CustomerDB
+	if err := cursor.Decode(&result); err != nil {
+		panic(err)
+	}
+	return result
+}
+
+//DELETE
+func DeleteCustomerFromDB(Id int) {
+
+	// get Client, Context, CancelFunc and err from connect method.
+	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
 		panic(err)
 	}
 
-	var result model.CustomerDB
-	if err := cursor.Decode(&result); err != nil {
-		// handle the error
+	// Free the resource when main function in returned
+	defer close(client, ctx, cancel)
+	// This query delete document when the maths
+	// field is greater than  60
+	query := bson.D{{"cid", Id}}
+
+	// Returns result of deletion and error
+	result, err := deleteOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, query)
+	if err != nil {
 		panic(err)
 	}
-	return result
+	log.Print("No.of rows affected by DeleteOne() : ")
+	log.Println(result.DeletedCount)
+}
+
+func deleteOne(client *mongo.Client, ctx context.Context,
+	dataBase, col string, query interface{}) (result *mongo.DeleteResult, err error) {
+
+	// select document and collection
+	collection := client.Database(dataBase).Collection(col)
+
+	// query is used to match a document  from the collection.
+	result, err = collection.DeleteOne(ctx, query)
+	return
 }

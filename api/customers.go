@@ -57,6 +57,21 @@ func UpdateCustomerData(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, requestBody)
 }
 
+func DeleteCustomerData(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id_string, ok := vars["id"]
+	if !ok {
+		log.Println("id is missing in parameters")
+	}
+	CustomerId, err := strconv.Atoi(id_string)
+	if err != nil {
+		http.Error(w, "Improper value of customer Id", http.StatusBadRequest)
+		return
+	}
+	DeleteCustomerFromDB(CustomerId)
+	respondJSON(w, http.StatusOK, "Success")
+}
+
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

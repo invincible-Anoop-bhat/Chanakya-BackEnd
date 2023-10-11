@@ -1,11 +1,9 @@
-package api
+package model
 
 import (
 	"context"
 	"log"
 	"time"
-
-	"Chanakya-BackEnd/model"
 
 	"github.com/oxycoder/struct2bson"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +15,8 @@ const (
 	DATABASE_NAME   = "prod"
 	COLLECTION_NAME = "customers"
 )
+
+//-------------------------------------MONGO CORE FUNCTIONS---------------------------------------------
 
 // This is a user defined method to close resources.
 // This method closes mongoDB connection and cancel context.
@@ -44,90 +44,27 @@ func connect(uri string) (*mongo.Client, context.Context,
 	return client, ctx, cancel, err
 }
 
-// query is user defined method used to query MongoDB,
-// that accepts mongo.client,context, database name,
-// collection name, a query and field.
-
-//  database name and collection name is of type
-// string. query is of type interface.
-// field is of type interface, which limits
-// the field being returned.
-
 // query method returns a cursor and error.
 func query(client *mongo.Client, ctx context.Context,
 	dataBase, col string, query, field interface{}) (result *mongo.Cursor, err error) {
 
-	// select database and collection.
 	collection := client.Database(dataBase).Collection(col)
 
-	// collection has an method Find,
-	// that returns a mongo.cursor
-	// based on query and field.
-	result, err = collection.Find(ctx, query,
-		options.Find().SetProjection(field))
+	result, err = collection.Find(ctx, query, options.Find().SetProjection(field))
 	return result, err
 }
 
-//UPDATE
-func updateCustomerInDB(data model.CustomerDB) error {
+// ------------------------------------Customer related DB Functions------------------------------------
+
+//Create
+func InsertCustomerToDB(data CustomerDB) error {
+
 	insertdata := struct2bson.ConvertStructToBSONMap(data, nil)
-	// get Client, Context, CancelFunc and err from connect method.
+
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
 		panic(err)
 	}
-
-	// Free the resource when main function in returned
-	defer close(client, ctx, cancel)
-	// filter object is used to select a single
-	// document matching that matches.
-	filter := bson.D{
-		{"cid", bson.D{{"$eq", data.Cid}}},
-	}
-
-	// The field of the document that need to updated.
-	update := bson.D{
-		{"$set", insertdata},
-	}
-
-	// Returns result of updated document and a error.
-	result, err := UpdateOne(client, ctx, DATABASE_NAME,
-		COLLECTION_NAME, filter, update)
-
-	// handle error
-	if err != nil {
-		panic(err)
-	}
-
-	// print count of documents that affected
-	log.Println("update single document")
-	log.Println(result.ModifiedCount)
-	return nil
-}
-
-func UpdateOne(client *mongo.Client, ctx context.Context, dataBase,
-	col string, filter, update interface{}) (result *mongo.UpdateResult, err error) {
-
-	// select the database and the collection
-	collection := client.Database(dataBase).Collection(col)
-
-	// A single document that match with the
-	// filter will get updated.
-	// update contains the filed which should get updated.
-	result, err = collection.UpdateOne(ctx, filter, update)
-	return
-}
-
-//INSERT
-func insertCustomerToDB(data model.CustomerDB) error {
-	insertdata := struct2bson.ConvertStructToBSONMap(data, nil)
-	// get Client, Context, CancelFunc and err from connect method.
-	client, ctx, cancel, err := connect("mongodb://localhost:27017")
-	if err != nil {
-		panic(err)
-	}
-
-	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
 
 	insertOneResult, err := insertOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, insertdata)
@@ -141,53 +78,33 @@ func insertCustomerToDB(data model.CustomerDB) error {
 
 func insertOne(client *mongo.Client, ctx context.Context, dataBase, col string, doc interface{}) (*mongo.InsertOneResult, error) {
 
-	// select database and collection ith Client.Database method
-	// and Database.Collection method
 	collection := client.Database(dataBase).Collection(col)
 
-	// InsertOne accept two argument of type Context
-	// and of empty interface
 	result, err := collection.InsertOne(ctx, doc)
 	return result, err
 }
 
-func GetCustomersFromDB() []model.CustomerDB {
+//READ
+func GetCustomersFromDB() []CustomerDB {
 
-	// get Client, Context, CancelFunc and err from connect method.
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
 		panic(err)
 	}
-
-	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
-	// create a filter an option of type interface,
-	// that stores bjson objects.
+
 	var filter, option interface{}
-
-	// filter  gets all document,
-	// with maths field greater that 70
 	filter = bson.D{}
-
-	//  option remove id field from all documents
+	//option remove id field from all documents
 	option = bson.D{{"_id", 0}}
 
-	// call the query method with client, context,
-	// database name, collection  name, filter and option
-	// This method returns momngo.cursor and error if any.
-	cursor, err := query(client, ctx, DATABASE_NAME,
-		COLLECTION_NAME, filter, option)
-	// handle the errors.
+	cursor, err := query(client, ctx, DATABASE_NAME, COLLECTION_NAME, filter, option)
 	if err != nil {
 		panic(err)
 	}
 
-	var results []model.CustomerDB
-
-	// to get bson object  from cursor,
-	// returns error if any.
+	var results []CustomerDB
 	if err := cursor.All(ctx, &results); err != nil {
-		// handle the error
 		panic(err)
 	}
 
@@ -198,44 +115,74 @@ func GetCustomersFromDB() []model.CustomerDB {
 	// }
 	return results
 }
-func GetCustomerbyIDFromDB(Id int) model.CustomerDB {
-	// get Client, Context, CancelFunc and err from connect method.
+
+func GetCustomerbyIDFromDB(Id int) CustomerDB {
+
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
 		panic(err)
 	}
-
-	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
 
 	filter := bson.D{{"cid", Id}}
-
 	collection := client.Database(DATABASE_NAME).Collection(COLLECTION_NAME)
+
 	cursor := collection.FindOne(ctx, filter)
 
-	var result model.CustomerDB
+	var result CustomerDB
 	if err := cursor.Decode(&result); err != nil {
 		panic(err)
 	}
 	return result
 }
 
-//DELETE
-func DeleteCustomerFromDB(Id int) {
+//UPDATE
+func UpdateCustomerInDB(data CustomerDB) error {
+	insertdata := struct2bson.ConvertStructToBSONMap(data, nil)
 
-	// get Client, Context, CancelFunc and err from connect method.
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
 		panic(err)
 	}
-
-	// Free the resource when main function in returned
 	defer close(client, ctx, cancel)
-	// This query delete document when the maths
-	// field is greater than  60
-	query := bson.D{{"cid", Id}}
 
-	// Returns result of deletion and error
+	filter := bson.D{
+		{"cid", data.Cid},
+	}
+
+	update := bson.D{
+		{"$set", insertdata},
+	}
+
+	result, err := UpdateOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, filter, update)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("update single document")
+	log.Println(result.ModifiedCount)
+	return nil
+}
+
+func UpdateOne(client *mongo.Client, ctx context.Context, dataBase,
+	col string, filter, update interface{}) (result *mongo.UpdateResult, err error) {
+
+	collection := client.Database(dataBase).Collection(col)
+
+	result, err = collection.UpdateOne(ctx, filter, update)
+	return result, err
+}
+
+//DELETE
+func DeleteCustomerFromDB(Id int) {
+
+	client, ctx, cancel, err := connect("mongodb://localhost:27017")
+	if err != nil {
+		panic(err)
+	}
+	defer close(client, ctx, cancel)
+
+	query := bson.D{{"cid", Id}}
 	result, err := deleteOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, query)
 	if err != nil {
 		panic(err)

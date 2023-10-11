@@ -1,7 +1,6 @@
 package interceptor
 
 import (
-	"log"
 	"net/http"
 	"os"
 )
@@ -18,9 +17,9 @@ func validateUser(authTokenString string) bool {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authInput := r.Header.Get("Authorization")
+		// authInput := r.Header.Get("Authorization")
 		// key := strings.Split(authInput, " ")
-		log.Println("Auth Input   ---------- : ", authInput)
+		// log.Println("Auth Input   ---------- : ", authInput)
 		// decoded, err := base64.StdEncoding.DecodeString(key[1])
 		// if err != nil {
 		// 	log.Println("Auth Erorr: error decoding , ", err)

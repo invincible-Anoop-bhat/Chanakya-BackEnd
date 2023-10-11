@@ -12,12 +12,12 @@ import (
 
 //Get ALL Customers
 func GetAllCustomers(w http.ResponseWriter, r *http.Request) {
-	dbdata := GetCustomersFromDB()
+	dbdata := model.GetCustomersFromDB()
 	data := model.CopyArrayToCustomer(dbdata)
 	respondJSON(w, http.StatusOK, data)
 }
 
-//Get Customer By ID
+//Get Customer By id
 func GetCustomerById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id_string, ok := vars["id"]
@@ -29,34 +29,36 @@ func GetCustomerById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Improper value of customer Id", http.StatusBadRequest)
 		return
 	}
-	dbdata := GetCustomerbyIDFromDB(id)
+	dbdata := model.GetCustomerbyIDFromDB(id)
 	data := dbdata.CopyToCustomer()
 	respondJSON(w, http.StatusOK, data)
 }
 
-//INSERT ONE Customer data
+//INSERT ONE Customer data (select by id)
 func AddCustomer(w http.ResponseWriter, r *http.Request) {
 	requestBody := model.Customer{}
 	json.NewDecoder(r.Body).Decode(&requestBody)
 	dataToInsert := model.CopyToCustomerDB(requestBody)
-	err := insertCustomerToDB(dataToInsert)
+	err := model.InsertCustomerToDB(dataToInsert)
 	if err != nil {
 		http.Error(w, "Error Adding Customer details", http.StatusInternalServerError)
 	}
 	respondJSON(w, http.StatusCreated, requestBody)
 }
 
+//UPDATE ONE Customer (Select by id)
 func UpdateCustomerData(w http.ResponseWriter, r *http.Request) {
 	requestBody := model.Customer{}
 	json.NewDecoder(r.Body).Decode(&requestBody)
 	dataToUpdate := model.CopyToCustomerDB(requestBody)
-	err := updateCustomerInDB(dataToUpdate)
+	err := model.UpdateCustomerInDB(dataToUpdate)
 	if err != nil {
 		http.Error(w, "Error Adding Customer details", http.StatusInternalServerError)
 	}
 	respondJSON(w, http.StatusCreated, requestBody)
 }
 
+//DELETE ONE Customer (select by id)
 func DeleteCustomerData(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id_string, ok := vars["id"]
@@ -68,7 +70,7 @@ func DeleteCustomerData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Improper value of customer Id", http.StatusBadRequest)
 		return
 	}
-	DeleteCustomerFromDB(CustomerId)
+	model.DeleteCustomerFromDB(CustomerId)
 	respondJSON(w, http.StatusOK, "Success")
 }
 

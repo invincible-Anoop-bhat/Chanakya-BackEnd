@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	DATABASE_NAME   = "prod"
-	COLLECTION_NAME = "customers"
+	DATABASE_NAME            = "prod"
+	CUSTOMER_COLLECTION_NAME = "customers"
 )
 
 //-------------------------------------MONGO CORE FUNCTIONS---------------------------------------------
@@ -67,7 +67,7 @@ func InsertCustomerToDB(data CustomerDB) error {
 	}
 	defer close(client, ctx, cancel)
 
-	insertOneResult, err := insertOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, insertdata)
+	insertOneResult, err := insertOne(client, ctx, DATABASE_NAME, CUSTOMER_COLLECTION_NAME, insertdata)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func GetCustomersFromDB() []CustomerDB {
 	//option remove id field from all documents
 	option = bson.D{{"_id", 0}}
 
-	cursor, err := query(client, ctx, DATABASE_NAME, COLLECTION_NAME, filter, option)
+	cursor, err := query(client, ctx, DATABASE_NAME, CUSTOMER_COLLECTION_NAME, filter, option)
 	if err != nil {
 		panic(err)
 	}
@@ -125,7 +125,7 @@ func GetCustomerbyIDFromDB(Id int) CustomerDB {
 	defer close(client, ctx, cancel)
 
 	filter := bson.D{{"cid", Id}}
-	collection := client.Database(DATABASE_NAME).Collection(COLLECTION_NAME)
+	collection := client.Database(DATABASE_NAME).Collection(CUSTOMER_COLLECTION_NAME)
 
 	cursor := collection.FindOne(ctx, filter)
 
@@ -154,7 +154,7 @@ func UpdateCustomerInDB(data CustomerDB) error {
 		{"$set", insertdata},
 	}
 
-	result, err := UpdateOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, filter, update)
+	result, err := UpdateOne(client, ctx, DATABASE_NAME, CUSTOMER_COLLECTION_NAME, filter, update)
 	if err != nil {
 		panic(err)
 	}
@@ -183,7 +183,7 @@ func DeleteCustomerFromDB(Id int) {
 	defer close(client, ctx, cancel)
 
 	query := bson.D{{"cid", Id}}
-	result, err := deleteOne(client, ctx, DATABASE_NAME, COLLECTION_NAME, query)
+	result, err := deleteOne(client, ctx, DATABASE_NAME, CUSTOMER_COLLECTION_NAME, query)
 	if err != nil {
 		panic(err)
 	}

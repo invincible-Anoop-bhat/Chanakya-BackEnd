@@ -29,7 +29,11 @@ func GetOrderById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Improper value of order Id", http.StatusBadRequest)
 		return
 	}
-	dbdata := model.GetOrderbyIDFromDB(id)
+	dbdata, err := model.GetOrderbyIDFromDB(id)
+	if err != nil {
+		http.Error(w, "Error fetching data from database : "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 	data := dbdata.CopyToOrder()
 	respondJSON(w, http.StatusOK, data)
 }

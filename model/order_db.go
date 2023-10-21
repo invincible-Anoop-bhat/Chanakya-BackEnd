@@ -67,24 +67,26 @@ func GetOrdersFromDB() []OrderDB {
 	return results
 }
 
-func GetOrderbyIDFromDB(Id int) OrderDB {
+func GetOrderbyIDFromDB(Id int) (OrderDB, error) {
 
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
-		panic(err)
+		return OrderDB{}, err
+		// panic(err)
 	}
 	defer close(client, ctx, cancel)
 
-	filter := bson.D{{"oid", Id}}
+	filter := bson.D{{"oId", Id}}
 	collection := client.Database(DATABASE_NAME).Collection(ORDER_COLLECTION_NAME)
 
 	cursor := collection.FindOne(ctx, filter)
 
 	var result OrderDB
 	if err := cursor.Decode(&result); err != nil {
-		panic(err)
+		return OrderDB{}, err
+		// panic(err)
 	}
-	return result
+	return result, nil
 }
 
 //UPDATE
@@ -98,7 +100,7 @@ func UpdateOrderInDB(data OrderDB) error {
 	defer close(client, ctx, cancel)
 
 	filter := bson.D{
-		{"oid", data.Cid},
+		{"oId", data.Oid},
 	}
 
 	update := bson.D{
@@ -124,7 +126,7 @@ func DeleteOrderFromDB(Id int) {
 	}
 	defer close(client, ctx, cancel)
 
-	query := bson.D{{"oid", Id}}
+	query := bson.D{{"oId", Id}}
 	result, err := deleteOne(client, ctx, DATABASE_NAME, ORDER_COLLECTION_NAME, query)
 	if err != nil {
 		panic(err)

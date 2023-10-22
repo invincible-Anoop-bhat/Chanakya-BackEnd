@@ -7,6 +7,7 @@ import (
 
 	"github.com/oxycoder/struct2bson"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -54,7 +55,35 @@ func query(client *mongo.Client, ctx context.Context,
 	return result, err
 }
 
-// ------------------------------------Customer related DB Functions------------------------------------
+func insertOne(client *mongo.Client, ctx context.Context, dataBase, col string, doc interface{}) (*mongo.InsertOneResult, error) {
+
+	collection := client.Database(dataBase).Collection(col)
+
+	result, err := collection.InsertOne(ctx, doc)
+	return result, err
+}
+
+func UpdateOne(client *mongo.Client, ctx context.Context, dataBase,
+	col string, filter, update interface{}) (result *mongo.UpdateResult, err error) {
+
+	collection := client.Database(dataBase).Collection(col)
+
+	result, err = collection.UpdateOne(ctx, filter, update)
+	return result, err
+}
+
+func deleteOne(client *mongo.Client, ctx context.Context,
+	dataBase, col string, query interface{}) (result *mongo.DeleteResult, err error) {
+
+	// select document and collection
+	collection := client.Database(dataBase).Collection(col)
+
+	// query is used to match a document  from the collection.
+	result, err = collection.DeleteOne(ctx, query)
+	return
+}
+
+// ------------------------------------Customer CRUD DB Functions------------------------------------
 
 //Create
 func InsertCustomerToDB(data CustomerDB) error {
@@ -71,17 +100,8 @@ func InsertCustomerToDB(data CustomerDB) error {
 	if err != nil {
 		return err
 	}
-	log.Print("Result of InsertOne : ")
-	log.Println(insertOneResult.InsertedID)
+	log.Println("Result of InsertOne, Id : ", insertOneResult.InsertedID)
 	return nil
-}
-
-func insertOne(client *mongo.Client, ctx context.Context, dataBase, col string, doc interface{}) (*mongo.InsertOneResult, error) {
-
-	collection := client.Database(dataBase).Collection(col)
-
-	result, err := collection.InsertOne(ctx, doc)
-	return result, err
 }
 
 //READ
@@ -164,15 +184,6 @@ func UpdateCustomerInDB(data CustomerDB) error {
 	return nil
 }
 
-func UpdateOne(client *mongo.Client, ctx context.Context, dataBase,
-	col string, filter, update interface{}) (result *mongo.UpdateResult, err error) {
-
-	collection := client.Database(dataBase).Collection(col)
-
-	result, err = collection.UpdateOne(ctx, filter, update)
-	return result, err
-}
-
 //DELETE
 func DeleteCustomerFromDB(Id int) {
 
@@ -191,13 +202,63 @@ func DeleteCustomerFromDB(Id int) {
 	log.Println(result.DeletedCount)
 }
 
-func deleteOne(client *mongo.Client, ctx context.Context,
-	dataBase, col string, query interface{}) (result *mongo.DeleteResult, err error) {
+//--------------------------------------------Customer+ DB functions-------------------------------------------
+func CheckCustomerExists(name string) (bool, error) {
 
-	// select document and collection
-	collection := client.Database(dataBase).Collection(col)
+	client, ctx, cancel, err := connect("mongodb://localhost:27017")
+	if err != nil {
+		//by sending true we make sure it doesn't add to db, since we were unable to check.
+		//However, it doesn't matter as the error will cause responding to API mandatory and doesn't execute next procedures.
+		return true, err
+		// panic(err)
+	}
+	defer close(client, ctx, cancel)
+	log.Println("cName : ", name)
+	filter := bson.D{{"cName", name}}
+	collection := client.Database(DATABASE_NAME).Collection(CUSTOMER_COLLECTION_NAME)
 
-	// query is used to match a document  from the collection.
-	result, err = collection.DeleteOne(ctx, query)
-	return
+	cursor := collection.FindOne(ctx, filter)
+
+	var result CustomerDB
+	if err := cursor.Decode(&result); err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Println("No documents found with that customer name")
+			return false, nil
+		} else {
+			//true or false doesn't matter as err is handled by calling func
+			return true, err
+			// panic(err)
+		}
+	}
+	// return result
+	log.Println("No errors while checking duplication. Customer already exists")
+	return true, nil
+}
+
+func GetAllPaymentPendingCustomersFromDB() []OrderDB {
+
+	client, ctx, cancel, err := connect("mongodb://localhost:27017")
+	if err != nil {
+		panic(err)
+	}
+	defer close(client, ctx, cancel)
+
+	var filter, option interface{}
+	filter = bson.D{primitive.E{Key: "completed", Value: false}}
+	//option remove id field from all documents
+	option = bson.D{{"_id", 0}}
+
+	cursor, err := query(client, ctx, DATABASE_NAME, ORDER_COLLECTION_NAME, filter, option)
+	if err != nil {
+		panic(err)
+	}
+
+	var orders []OrderDB
+	// var cIds []int
+	if err := cursor.All(ctx, &orders); err != nil {
+		panic(err)
+	}
+	// log.Println("C ids ")
+	// log.Println(cIds)
+	return orders
 }

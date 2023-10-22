@@ -17,19 +17,25 @@ func main() {
 	router.Use(interceptor.AuthMiddleware)
 
 	router.HandleFunc("/index", api.Index).Methods("GET")
-	//customer
+	//customer crud
 	router.HandleFunc("/addCustomer", api.AddCustomer).Methods("POST")
 	router.HandleFunc("/getAllCustomers", api.GetAllCustomers).Methods("GET")
 	router.HandleFunc("/getCustomer/{id}", api.GetCustomerById).Methods("GET")
 	router.HandleFunc("/updateCustomer", api.UpdateCustomerData).Methods("PUT")
 	router.HandleFunc("/deleteCustomer/{id}", api.DeleteCustomerData).Methods("DELETE")
 
-	//order
+	//customer +
+	router.HandleFunc("/customers/getDueDetails", api.GetAllPaymentPendingCustomers).Methods("GET")
+
+	//order crud
 	router.HandleFunc("/addOrder", api.AddOrder).Methods("POST")
 	router.HandleFunc("/getAllOrders", api.GetAllOrders).Methods("GET")
 	router.HandleFunc("/getOrder/{id}", api.GetOrderById).Methods("GET")
 	router.HandleFunc("/updateOrder", api.UpdateOrderData).Methods("PUT")
 	router.HandleFunc("/deleteOrder/{id}", api.DeleteOrderData).Methods("DELETE")
+
+	//order +
+	// router.HandleFunc("/orders/getLatestOrderId", api.GetLatestOrderId).Methods("POST")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},

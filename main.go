@@ -44,5 +44,5 @@ func main() {
 	})
 
 	log.Printf("Starting server at port 8080\n")
-	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
+	log.Fatal(http.ListenAndServe(":8000", c.Handler(router)))
 }

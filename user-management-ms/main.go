@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"user-management/interceptor"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -15,7 +16,7 @@ func main() {
 	router := mux.NewRouter()
 
 	// Interceptors
-	// router.Use(interceptor.LoggingMiddleware)
+	router.Use(interceptor.LoggingMiddleware)
 
 	// API Handlers
 	router.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("Welcome to User Management Backend!")) }).Methods("GET")

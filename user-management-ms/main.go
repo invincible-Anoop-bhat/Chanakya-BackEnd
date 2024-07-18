@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"user-management/interceptor"
 
+	"user-management/api"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
@@ -19,7 +21,7 @@ func main() {
 	router.Use(interceptor.LoggingMiddleware)
 
 	// API Handlers
-	router.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("Welcome to User Management Backend!")) }).Methods("GET")
+	api.MapHandlersToRoutes(router)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
